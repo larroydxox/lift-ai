@@ -10,24 +10,14 @@ package-lock.json.bak
 .env.local
 .env.*.local
 
-# React Native / Metro
-.expo/
-.expo-shared/
+# Build output
 dist/
-web-build/
-metro.log
-*.jsbundle
+dist-ssr/
+*.local
 
-# Native
-android/app/build/
-android/build/
-android/.gradle/
-android/local.properties
-ios/build/
-ios/Pods/
-ios/*.xcworkspace/xcuserdata/
-*.keystore
-!debug.keystore
+# Vite / Vercel
+.vite/
+.vercel/
 
 # IDE / OS
 .idea/

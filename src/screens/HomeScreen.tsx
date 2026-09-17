@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { View, ScrollView, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useEffect, useState } from 'react';
 import { authService } from '../services/authService';
 import { VoiceButton } from '../components/VoiceButton';
 import { VoiceStatus } from '../components/VoiceStatus';
@@ -8,8 +7,7 @@ import { useVoiceInput } from '../hooks/useVoiceInput';
 import { useWorkouts } from '../hooks/useWorkouts';
 import { useMeals } from '../hooks/useMeals';
 
-export const HomeScreen: React.FC = () => {
-  const [user, setUser] = useState<any>(null);
+export function HomeScreen({ user }: { user: any }) {
   const [showConfirmation, setShowConfirmation] = useState(false);
 
   const voice = useVoiceInput(user?.id);
@@ -17,15 +15,7 @@ export const HomeScreen: React.FC = () => {
   const meals = useMeals(user?.id);
 
   useEffect(() => {
-    authService.getCurrentUser().then(setUser).catch(() => setUser(null));
-    const unsubscribe = authService.onAuthStateChange((u) => setUser(u));
-    return () => unsubscribe?.();
-  }, []);
-
-  useEffect(() => {
-    if (voice.status === 'confirming') {
-      setShowConfirmation(true);
-    }
+    if (voice.status === 'confirming') setShowConfirmation(true);
   }, [voice.status]);
 
   const handleConfirm = async () => {
@@ -33,11 +23,9 @@ export const HomeScreen: React.FC = () => {
       if (!voice.result) return;
       if (voice.result.categoria === 'treinos') {
         await workouts.addExercises(voice.result.items);
-      } else if (voice.result.categoria === 'alimentacao') {
-        if (voice.result.items[0]) await meals.addMeal(voice.result.items[0]);
+      } else if (voice.result.categoria === 'alimentacao' && voice.result.items[0]) {
+        await meals.addMeal(voice.result.items[0]);
       }
-      // TODO: métricas, atividades
-
       setShowConfirmation(false);
       voice.reset();
     } catch (error) {
@@ -45,135 +33,121 @@ export const HomeScreen: React.FC = () => {
     }
   };
 
-  if (!user) {
-    return (
-      <View style={[styles.container, styles.center]}>
-        <Text style={styles.title}>Please log in</Text>
-      </View>
-    );
-  }
-
   return (
-    <View style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <Text style={styles.title}>TODAY</Text>
-          <TouchableOpacity onPress={() => authService.signOut()}>
-            <Text style={styles.logoutButton}>Logout</Text>
-          </TouchableOpacity>
-        </View>
+    <div style={{ flex: 1, paddingBottom: 120 }}>
+      <div style={{ padding: '16px 16px 0', overflowY: 'auto' }}>
+        {/* Header */}
+        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <h1 style={{ fontSize: 28, fontWeight: 600, margin: 0 }}>TODAY</h1>
+          <button
+            onClick={() => authService.signOut()}
+            style={{ background: 'none', border: 'none', color: 'var(--accent)', fontSize: 14, fontWeight: 600 }}
+          >
+            Sair
+          </button>
+        </header>
 
         {/* Workouts */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>💪 Workouts</Text>
+        <Section title="💪 WORKOUTS">
           {workouts.loading ? (
-            <Text style={styles.loadingText}>Loading...</Text>
+            <Muted>Carregando…</Muted>
+          ) : workouts.workouts.length === 0 ? (
+            <Muted>Nenhum treino hoje. Toque no microfone.</Muted>
           ) : (
             workouts.workouts.map((wo) => (
-              <View key={wo.id} style={styles.card}>
-                <Text style={styles.cardTitle}>{wo.tipo_treino || 'Workout'}</Text>
-                <Text style={styles.cardText}>{wo.exercises.length} exercises</Text>
-              </View>
+              <Card key={wo.id}>
+                <div style={{ fontSize: 16, fontWeight: 600 }}>{wo.tipo_treino || 'Workout'}</div>
+                <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 6 }}>
+                  {wo.exercises.length} exercício(s)
+                </div>
+                {wo.exercises.map((ex: any) => (
+                  <div key={ex.id} style={{ fontSize: 13, color: 'var(--muted)', marginTop: 4 }}>
+                    • {ex.nome} {ex.sets ?? '?'}×{ex.reps ?? '?'}
+                    {ex.peso ? ` · ${ex.peso}${ex.unidade || 'kg'}` : ''}
+                  </div>
+                ))}
+              </Card>
             ))
           )}
-        </View>
+        </Section>
 
         {/* Meals */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🍔 Nutrition</Text>
-          <View style={styles.calorieCard}>
-            <Text style={styles.calorieValue}>{Math.round(meals.totalCalories)}</Text>
-            <Text style={styles.calorieLabel}>calories / 2000</Text>
-          </View>
+        <Section title="🍔 NUTRITION">
+          <div style={{ background: 'var(--card)', borderRadius: 12, padding: 16, textAlign: 'center', marginBottom: 8 }}>
+            <div style={{ fontSize: 32, fontWeight: 600 }}>{Math.round(meals.totalCalories)}</div>
+            <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>calorias / 2000</div>
+          </div>
           {meals.meals.map((meal) => (
-            <View key={meal.id} style={styles.mealItem}>
-              <Text style={styles.mealName}>{meal.alimento}</Text>
-              <Text style={styles.mealCal}>{meal.calorias_estimadas} cal</Text>
-            </View>
+            <div
+              key={meal.id}
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                background: 'var(--card)',
+                border: '0.5px solid var(--border)',
+                borderRadius: 8,
+                padding: 12,
+                marginBottom: 8,
+              }}
+            >
+              <span style={{ fontSize: 14 }}>{meal.alimento}</span>
+              <span style={{ fontSize: 13, color: 'var(--muted)' }}>{meal.calorias_estimadas ?? 0} cal</span>
+            </div>
           ))}
-        </View>
+        </Section>
+      </div>
 
-        <View style={{ height: 120 }} />
-      </ScrollView>
+      {/* Voice button */}
+      <div style={{ position: 'fixed', bottom: 32, left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 10 }}>
+        <VoiceButton onResult={voice.handleVoiceInput} onStatusChange={() => {}} />
+      </div>
 
-      {/* Voice Button */}
-      <View style={styles.voiceButtonContainer}>
-        <VoiceButton onResult={voice.handleVoiceInput} />
-      </View>
-
-      {/* Status */}
-      {voice.status !== 'idle' && <VoiceStatus status={voice.status} message={voice.transcript} />}
-
-      {/* Confirmation Modal */}
-      {showConfirmation && (
-        <ConfirmationModal
-          result={voice.result}
-          onConfirm={handleConfirm}
-          onCancel={() => setShowConfirmation(false)}
-        />
+      {voice.status !== 'idle' && !showConfirmation && (
+        <VoiceStatus status={voice.status} message={voice.transcript} />
       )}
-    </View>
-  );
-};
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a' },
-  center: { alignItems: 'center', justifyContent: 'center' },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    marginBottom: 16,
-  },
-  title: { fontSize: 28, fontWeight: '600', color: '#fff' },
-  logoutButton: { color: '#FF6B35', fontSize: 14, fontWeight: '600' },
-  section: { marginHorizontal: 16, marginBottom: 24 },
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#666',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 12,
-  },
-  card: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 8,
-    borderWidth: 0.5,
-    borderColor: 'rgba(255,255,255,0.1)',
-  },
-  cardTitle: { fontSize: 16, fontWeight: '600', color: '#fff', marginBottom: 8 },
-  cardText: { fontSize: 13, color: '#888' },
-  calorieCard: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    alignItems: 'center',
-  },
-  calorieValue: { fontSize: 32, fontWeight: '600', color: '#fff' },
-  calorieLabel: { fontSize: 12, color: '#888', marginTop: 4 },
-  mealItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    backgroundColor: '#1a1a1a',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
-    borderWidth: 0.5,
-    borderColor: 'rgba(255,255,255,0.1)',
-  },
-  mealName: { color: '#fff', fontSize: 14 },
-  mealCal: { color: '#888', fontSize: 13 },
-  loadingText: { color: '#888', fontSize: 14 },
-  voiceButtonContainer: {
-    position: 'absolute',
-    bottom: 32,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-  },
-});
+      {showConfirmation && (
+        <ConfirmationModal result={voice.result} onConfirm={handleConfirm} onCancel={() => setShowConfirmation(false)} />
+      )}
+    </div>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section style={{ marginBottom: 24 }}>
+      <div
+        style={{
+          fontSize: 12,
+          fontWeight: 600,
+          color: 'var(--dim)',
+          letterSpacing: 0.5,
+          marginBottom: 10,
+        }}
+      >
+        {title}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function Card({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      style={{
+        background: 'var(--card)',
+        border: '0.5px solid var(--border)',
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 8,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function Muted({ children }: { children: React.ReactNode }) {
+  return <div style={{ color: 'var(--muted)', fontSize: 14 }}>{children}</div>;
+}

@@ -1,0 +1,49 @@
+:root {
+  --bg: #0a0a0a;
+  --card: #1a1a1a;
+  --card-2: #0f0f0f;
+  --border: rgba(255, 255, 255, 0.1);
+  --text: #ffffff;
+  --muted: #888888;
+  --dim: #666666;
+  --accent: #ff6b35;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  overscroll-behavior: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input {
+  font-family: inherit;
+}
+
+/* App é montado como coluna centralizada, largura de celular */
+.app-shell {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}

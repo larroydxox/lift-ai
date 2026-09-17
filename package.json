@@ -2,31 +2,24 @@
   "name": "lift-ai",
   "version": "0.1.0",
   "private": true,
-  "description": "LIFT AI — voice-first fitness tracker (React Native + Supabase + Claude)",
+  "type": "module",
+  "description": "LIFT AI — voice-first fitness tracker (web: Vite + React + Supabase)",
   "scripts": {
-    "start": "react-native start",
-    "android": "react-native run-android",
-    "ios": "react-native run-ios",
-    "tsc": "tsc --noEmit",
-    "lint": "eslint . --ext .ts,.tsx"
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "tsc": "tsc --noEmit"
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-native": "^0.72.0",
-    "@react-navigation/native": "^6.1.0",
-    "@react-navigation/bottom-tabs": "^6.5.0",
-    "@react-native-voice/voice": "^3.2.0",
-    "@supabase/supabase-js": "^2.38.0",
-    "@react-native-async-storage/async-storage": "^1.17.0",
-    "react-native-health": "^1.19.0",
-    "axios": "^1.4.0",
-    "date-fns": "^2.30.0",
-    "zustand": "^4.3.8",
-    "react-native-url-polyfill": "^2.0.0"
+    "@supabase/supabase-js": "^2.58.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "typescript": "^5.0.0",
-    "@types/react": "^18.0.0",
-    "@types/react-native": "^0.72.0"
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11"
   }
 }

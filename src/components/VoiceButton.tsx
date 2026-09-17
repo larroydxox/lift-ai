@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
 
 interface VoiceButtonProps {
   onResult: (transcript: string) => void;
@@ -7,57 +6,91 @@ interface VoiceButtonProps {
 }
 
 /**
- * Botão de gravação por voz.
- *
- * TODO: Ligar ao @react-native-voice/voice (Voice.start / Voice.onSpeechResults)
- * e chamar onResult com o transcript final. Este stub apenas dispara um texto
- * de exemplo para o fluxo poder ser testado.
+ * Botão de gravação por voz usando a Web Speech API (webkitSpeechRecognition).
+ * Funciona no Chrome (desktop e Android). No iOS Safari o suporte é limitado —
+ * há um fallback de digitação via prompt().
  */
-export const VoiceButton: React.FC<VoiceButtonProps> = ({ onResult, onStatusChange }) => {
+export function VoiceButton({ onResult, onStatusChange }: VoiceButtonProps) {
   const [recording, setRecording] = useState(false);
+  const [supported, setSupported] = useState(true);
+  const recognitionRef = useRef<any>(null);
 
-  function handlePress() {
-    if (recording) {
+  useEffect(() => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      setSupported(false);
+      return;
+    }
+    const recognition = new SR();
+    recognition.lang = 'pt-BR';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      onResult(transcript);
+    };
+    recognition.onerror = () => {
+      setRecording(false);
+      onStatusChange?.('error');
+    };
+    recognition.onend = () => {
       setRecording(false);
       onStatusChange?.('idle');
-      // Stub: substituir pelo transcript real do reconhecimento de fala.
-      onResult('supino reto 3 séries de 10 com 40 kg');
+    };
+
+    recognitionRef.current = recognition;
+    return () => {
+      try {
+        recognition.abort();
+      } catch {
+        /* noop */
+      }
+    };
+  }, [onResult, onStatusChange]);
+
+  function handlePress() {
+    if (!supported) {
+      // Fallback: digitação manual quando não há reconhecimento de voz.
+      const text = window.prompt('Digite o que você fez (ex: "supino 3x10 com 40kg"):');
+      if (text) onResult(text);
+      return;
+    }
+    if (recording) {
+      recognitionRef.current?.stop();
+      setRecording(false);
+      onStatusChange?.('idle');
     } else {
-      setRecording(true);
-      onStatusChange?.('listening');
+      try {
+        recognitionRef.current?.start();
+        setRecording(true);
+        onStatusChange?.('listening');
+      } catch {
+        /* já iniciado */
+      }
     }
   }
 
   return (
-    <TouchableOpacity
-      style={[styles.button, recording && styles.buttonActive]}
-      onPress={handlePress}
-      activeOpacity={0.8}
+    <button
+      onClick={handlePress}
+      aria-label={recording ? 'Parar gravação' : 'Gravar por voz'}
+      style={{
+        width: 64,
+        height: 64,
+        borderRadius: '50%',
+        border: 'none',
+        background: recording ? '#d94f1e' : 'var(--accent)',
+        color: '#fff',
+        fontSize: 26,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxShadow: '0 6px 20px rgba(255,107,53,0.45)',
+        transition: 'transform 0.1s ease',
+      }}
     >
-      <Text style={styles.icon}>{recording ? '■' : '🎤'}</Text>
-    </TouchableOpacity>
+      {recording ? '■' : '🎤'}
+    </button>
   );
-};
-
-const styles = StyleSheet.create({
-  button: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: '#FF6B35',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#FF6B35',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  buttonActive: {
-    backgroundColor: '#d94f1e',
-  },
-  icon: {
-    fontSize: 28,
-    color: '#fff',
-  },
-});
+}

@@ -1,28 +1,33 @@
-import 'react-native-url-polyfill/auto';
 import { createClient } from '@supabase/supabase-js';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY || '';
+const envUrl = import.meta.env.VITE_SUPABASE_URL;
+const envKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
+if (!envUrl || !envKey) {
   console.warn(
-    '[supabaseClient] REACT_APP_SUPABASE_URL / REACT_APP_SUPABASE_ANON_KEY não definidos. ' +
-      'Copie .env.example para .env e preencha as chaves.'
+    '[supabaseClient] VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY não definidos. ' +
+      'Copie .env.example para .env e preencha as chaves (na Vercel: Project Settings > Environment Variables). ' +
+      'Usando placeholder — as chamadas ao Supabase vão falhar até configurar.'
   );
 }
+
+// Fallback com URL válida só para o app não quebrar no import quando faltam as
+// variáveis (ex: primeiro `npm run dev` sem .env). As chamadas reais vão falhar
+// até você configurar as credenciais.
+const supabaseUrl = envUrl || 'https://placeholder.supabase.co';
+const supabaseAnonKey = envKey || 'placeholder-anon-key';
 
 // Nota: instanciamos o client sem o genérico <Database> de propósito. O tipo
 // `Database` abaixo é escrito à mão e serve como documentação/referência; passá-lo
 // ao createClient faz o `.insert()` do supabase-js resolver para `never`. Quando
 // quiser tipagem forte de verdade, gere os tipos com `supabase gen types typescript`
 // e troque por `createClient<Database>(...)`.
+// No browser o storage padrão é o localStorage — não precisa configurar `storage`.
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    storage: AsyncStorage,
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false,
+    detectSessionInUrl: true,
   },
 });
 
