@@ -18,7 +18,7 @@
     "@react-native-voice/voice": "^3.2.0",
     "@supabase/supabase-js": "^2.38.0",
     "@react-native-async-storage/async-storage": "^1.17.0",
-    "react-native-health": "^7.0.0",
+    "react-native-health": "^1.19.0",
     "axios": "^1.4.0",
     "date-fns": "^2.30.0",
     "zustand": "^4.3.8",

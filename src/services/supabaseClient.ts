@@ -12,7 +12,12 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+// Nota: instanciamos o client sem o genérico <Database> de propósito. O tipo
+// `Database` abaixo é escrito à mão e serve como documentação/referência; passá-lo
+// ao createClient faz o `.insert()` do supabase-js resolver para `never`. Quando
+// quiser tipagem forte de verdade, gere os tipos com `supabase gen types typescript`
+// e troque por `createClient<Database>(...)`.
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     storage: AsyncStorage,
     autoRefreshToken: true,
