@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { authService } from '../services/authService';
 import { VoiceButton } from '../components/VoiceButton';
 import { VoiceStatus } from '../components/VoiceStatus';
 import { ConfirmationModal } from '../components/ConfirmationModal';
@@ -7,12 +6,16 @@ import { useVoiceInput } from '../hooks/useVoiceInput';
 import { useWorkouts } from '../hooks/useWorkouts';
 import { useMeals } from '../hooks/useMeals';
 
-export function HomeScreen({ user }: { user: any }) {
+export function HomeScreen() {
   const [showConfirmation, setShowConfirmation] = useState(false);
 
-  const voice = useVoiceInput(user?.id);
-  const workouts = useWorkouts(user?.id);
-  const meals = useMeals(user?.id);
+  // Sem autenticação por enquanto — userId indefinido. Os hooks/services só
+  // carregam/salvam dados quando houver um userId (o RLS do Supabase exige um
+  // usuário). Quando você quiser, a gente pluga auth de volta.
+  const userId = undefined;
+  const voice = useVoiceInput(userId);
+  const workouts = useWorkouts(userId);
+  const meals = useMeals(userId);
 
   useEffect(() => {
     if (voice.status === 'confirming') setShowConfirmation(true);
@@ -39,12 +42,6 @@ export function HomeScreen({ user }: { user: any }) {
         {/* Header */}
         <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <h1 style={{ fontSize: 28, fontWeight: 600, margin: 0 }}>TODAY</h1>
-          <button
-            onClick={() => authService.signOut()}
-            style={{ background: 'none', border: 'none', color: 'var(--accent)', fontSize: 14, fontWeight: 600 }}
-          >
-            Sair
-          </button>
         </header>
 
         {/* Workouts */}

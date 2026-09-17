@@ -24,7 +24,10 @@ export function useMeals(userId?: string) {
   }, [userId]);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
 
     loadMeals();
 
