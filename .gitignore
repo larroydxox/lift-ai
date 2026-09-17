@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+npm-debug.log
+yarn-error.log
+yarn.lock
+package-lock.json.bak
+
+# Environment / secrets
+.env
+.env.local
+.env.*.local
+
+# React Native / Metro
+.expo/
+.expo-shared/
+dist/
+web-build/
+metro.log
+*.jsbundle
+
+# Native
+android/app/build/
+android/build/
+android/.gradle/
+android/local.properties
+ios/build/
+ios/Pods/
+ios/*.xcworkspace/xcuserdata/
+*.keystore
+!debug.keystore
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Logs & coverage
+*.log
+coverage/
+
+# TypeScript
+*.tsbuildinfo
